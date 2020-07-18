@@ -7,7 +7,7 @@ import api from './services/api';
 import DevItem from './components/DevItem';
 import DevForm from './components/DevForm';
 //componente: é um bloco isolado de html, css, js o qual não interfere no restante da aplicação
-//estado: informações mantidas pelo componente(imutabilidade)
+//estado: informações mantidas pelo componente(lembrar: imutabilidade)
 //propriedade: informações que um componente Pai passa para o componente filho
 
 function App() {
@@ -36,7 +36,7 @@ function App() {
       <main>
         <ul>
           {devs.map(dev => (
-            <DevItem Key={dev._id} dev={dev}/>
+            <DevItem key={dev._id} dev={dev}/>
           ))}
         </ul>
       </main>
