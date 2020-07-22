@@ -4,6 +4,7 @@ import { StyleSheet, Image, View, Text, TextInput, TouchableOpacity } from 'reac
 import { requestPermissionsAsync, getCurrentPositionAsync } from 'expo-location';
 import { MaterialIcons } from '@expo/vector-icons';
 import api from '../services/api';
+import { connect, disconnect, subscribeToNewDevs } from '../services/socket';
 
 function Main({ navigation }) {
     const [devs, setDevs] = useState([]);
@@ -22,13 +23,26 @@ function Main({ navigation }) {
                 setCurrentRegion({
                     latitude,
                     longitude,
-                    latitudeDelta: 0.01,
-                    longitudeDelta: 0.01,
+                    latitudeDelta: 0.04,
+                    longitudeDelta: 0.04,
                 })
             }
         }
         loadInitialPosition();
     }, []);
+
+    useEffect(() => {
+        subscribeToNewDevs(dev => setDevs([...devs, dev]));
+    }, [devs]);
+
+    function setupWebsocket() {
+        disconnect();
+
+        const { latitude, longitude } = currentRegion;
+        connect(
+            latitude, longitude, techs
+        );
+    }
 
     async function loadDevs() {
         const { latitude, longitude } = currentRegion;
@@ -41,6 +55,7 @@ function Main({ navigation }) {
             }
         });
         setDevs(response.data.devs);
+        setupWebsocket();
     }
 
     function handleRegionChanged(region) {
@@ -58,14 +73,15 @@ function Main({ navigation }) {
                 initialRegion={currentRegion} style={styles.map} >
                 {
                     devs.map(dev => (
-                        <Marker 
-                        key={dev._id}
-                        coordinate={{ 
-                            latitude: dev.location.coordinates[0], 
-                            longitude: dev.location.coordinates[1] }}>
-                            <Image 
-                            style={styles.avatar} 
-                            source={{ uri: dev.avatar_url}} />
+                        <Marker
+                            key={dev._id}
+                            coordinate={{
+                                latitude: dev.location.coordinates[0],
+                                longitude: dev.location.coordinates[1]
+                            }}>
+                            <Image
+                                style={styles.avatar}
+                                source={{ uri: dev.avatar_url }} />
                             <Callout onPress={() => {
                                 //navegação
                                 navigation.navigate('Profile', { github_username: dev.github_username })
@@ -86,7 +102,7 @@ function Main({ navigation }) {
                     placeholder="Buscar devs por techs..."
                     placeholderTextColor="#999"
                     autoCapitalize="words"
-                    autoCorrect={false} 
+                    autoCorrect={false}
                     value={techs}
                     onChangeText={setTechs}
                 />
